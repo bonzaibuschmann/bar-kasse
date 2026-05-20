@@ -5,24 +5,39 @@ import { Category, Product, CartItem } from "../types";
 import Basket from "../components/Basket";
 import ChangeCalculator from "../components/ChangeCalculator";
 
+interface Register {
+  id: number;
+  name: string;
+  active: boolean;
+}
+
 export default function RegisterPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [registers, setRegisters] = useState<Register[]>([]);
+  const [register, setRegister] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [register, setRegister] = useState("1");
   const [loading, setLoading] = useState(true);
   const [showCheckout, setShowCheckout] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
   useEffect(() => {
-    loadProducts();
+    loadData();
   }, []);
 
-  async function loadProducts() {
+  async function loadData() {
     try {
-      const cats = await apiFetch<Category[]>("/categories");
+      const [cats, regs] = await Promise.all([
+        apiFetch<Category[]>("/categories"),
+        apiFetch<Register[]>("/registers"),
+      ]);
       setCategories(cats);
+      const activeRegs = regs.filter((r) => r.active);
+      setRegisters(activeRegs);
+      if (activeRegs.length > 0 && !register) {
+        setRegister(activeRegs[0].name);
+      }
     } catch (err) {
-      console.error("Failed to load products:", err);
+      console.error("Failed to load data:", err);
     } finally {
       setLoading(false);
     }
@@ -161,8 +176,8 @@ export default function RegisterPage() {
   }
 
   function formatVolume(v: number | null): string {
-    if (!v) return "";
-    return v >= 1 ? `${v}L` : `${(v * 1000).toFixed(0)}ml`;
+  if (!v) return "";
+  return `${v}L`;
   }
 
   if (loading) {
@@ -182,32 +197,47 @@ export default function RegisterPage() {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Products by category rows */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {categories.map((cat) => (
-            <div key={cat.id}>
-              <div className="text-xs text-gray-500 mb-1.5 uppercase tracking-wider">{cat.name}</div>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {cat.products
-                  .filter((p) => !p.isDeposit)
-                  .map((product) => (
+        {/* Left: Products by category rows — fills viewport, no scroll */}
+        <div className="flex-1 flex flex-col p-3 gap-2 overflow-hidden">
+          {(() => {
+            const allCatProducts = categories.map((cat) => ({
+              cat,
+              products: cat.products.filter((p) => !p.isDeposit),
+            }));
+            const maxItems = Math.max(0, ...allCatProducts.map((c) => c.products.length));
+            return allCatProducts.map(({ cat, products }) => (
+              <div key={cat.id} className="flex flex-col flex-1 min-h-0">
+                <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider shrink-0">{cat.name}</div>
+                <div className="grid flex-1 gap-1.5"
+                  style={{ gridTemplateColumns: `repeat(${maxItems}, 1fr)` }}
+                >
+                  {products.map((product) => (
                     <button
                       key={product.id}
-                      onClick={() => addToCart(product)}
-                      className="bg-[#111] hover:bg-[#222] border border-gray-800 rounded-xl p-3 text-center touch-button transition-all flex flex-col items-center justify-center min-w-[110px] min-h-[90px] relative shrink-0"
+                      onClick={() => product.active && addToCart(product)}
+                      disabled={!product.active}
+                      className={`bg-[#111] border border-gray-800 rounded-xl p-1 text-center transition-all flex flex-col items-center justify-center relative ${
+                        product.active ? "hover:bg-[#222] touch-button" : "cursor-not-allowed"
+                      }`}
                     >
-                      <span className="font-semibold text-sm leading-tight">{product.name}</span>
-                      {product.volume && (
-                        <span className="text-xs text-gray-500 mt-0.5">{formatVolume(product.volume)}</span>
+                      {!product.active && (
+                        <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center z-10">
+                          <span className="text-red-500 font-black text-xs tracking-wider">OUT</span>
+                        </div>
                       )}
-                      <span className="text-emerald-400 font-bold mt-1">
+                      <span className="font-semibold text-xs leading-tight truncate w-full px-1">{product.name}</span>
+                      {product.volume && (
+                        <span className="text-[10px] text-gray-500">{formatVolume(product.volume)}</span>
+                      )}
+                      <span className="text-emerald-400 font-bold text-xs mt-0.5">
                         {product.price.toFixed(2).replace(".", ",")} €
                       </span>
                     </button>
                   ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ));
+          })()}
         </div>
 
         {/* Right: Basket + nav */}
@@ -220,10 +250,11 @@ export default function RegisterPage() {
                 value={register}
                 onChange={(e) => setRegister(e.target.value)}
                 className="bg-black text-white rounded px-2 py-1 text-xs border border-gray-700"
+                style={{ colorScheme: "dark" }}
               >
-                <option value="1">Register 1</option>
-                <option value="2">Register 2</option>
-                <option value="3">Register 3</option>
+                {registers.map((r) => (
+                  <option key={r.id} value={r.name} className="bg-[#111]">{r.name}</option>
+                ))}
               </select>
             </div>
             <div className="flex gap-3">

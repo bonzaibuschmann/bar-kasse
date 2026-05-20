@@ -11,7 +11,7 @@ interface Props {
 
 function formatVolume(v: number | null): string {
   if (!v) return "";
-  return v >= 1 ? `${v}L` : `${(v * 1000).toFixed(0)}ml`;
+  return `${v}L`;
 }
 
 export default function Basket({ cart, total, removeItem, removeDepositOnly, changeQuantity, clearCart }: Props) {

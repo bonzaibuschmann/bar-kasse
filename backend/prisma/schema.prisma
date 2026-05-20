@@ -62,3 +62,10 @@ model OrderItem {
   isDeposit  Boolean @default(false)
   depositFor Int?    // links this deposit item to the parent order item
 }
+
+model Register {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

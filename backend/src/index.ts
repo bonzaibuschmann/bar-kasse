@@ -6,6 +6,7 @@ import productRoutes from "./routes/products";
 import categoryRoutes from "./routes/categories";
 import orderRoutes from "./routes/orders";
 import dashboardRoutes from "./routes/dashboard";
+import registerRoutes from "./routes/registers";
 
 export const prisma = new PrismaClient();
 
@@ -26,6 +27,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/registers", registerRoutes);
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Backend running on port ${PORT}`);
