@@ -31,10 +31,7 @@ docker compose exec backend-dev npx prisma db seed
 | Dashboard | `/dashboard` | Yes (admin) |
 | Login | `/login` | — |
 
-## Default Admin Credentials
 
-- Username: `admin`
-- Password: `admin123`
 
 ## Architecture
 
