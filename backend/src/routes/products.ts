@@ -42,7 +42,7 @@ router.get("/all", authMiddleware, requireAdmin, async (_req: Request, res: Resp
 // Create product (admin only)
 router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { name, price, categoryId, isDeposit, active, order, depositId } = req.body;
+    const { name, price, categoryId, isDeposit, active, order, depositId, volume } = req.body;
     if (!name || price === undefined || !categoryId) {
       res.status(400).json({ error: "Name, price, and categoryId required" });
       return;
@@ -52,6 +52,7 @@ router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Respons
       data: {
         name,
         price: parseFloat(price),
+        volume: volume !== undefined && volume !== null && volume !== "" ? parseFloat(volume) : null,
         categoryId: parseInt(categoryId),
         isDeposit: isDeposit || false,
         active: active !== false,
@@ -71,13 +72,14 @@ router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Respons
 router.put("/:id", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, price, categoryId, isDeposit, active, order, depositId } = req.body;
+    const { name, price, categoryId, isDeposit, active, order, depositId, volume } = req.body;
 
     const product = await prisma.product.update({
       where: { id: parseInt(id) },
       data: {
         ...(name !== undefined && { name }),
         ...(price !== undefined && { price: parseFloat(price) }),
+        ...(volume !== undefined && { volume: volume !== null && volume !== "" ? parseFloat(volume) : null }),
         ...(categoryId !== undefined && { categoryId: parseInt(categoryId) }),
         ...(isDeposit !== undefined && { isDeposit }),
         ...(active !== undefined && { active }),

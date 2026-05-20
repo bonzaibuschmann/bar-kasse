@@ -29,20 +29,20 @@ async function main() {
   const catCount = await prisma.category.count();
   if (catCount === 0) {
     const drinks = await prisma.category.create({
-      data: { name: "Getränke", icon: "🍺", order: 0 },
+      data: { name: "Getränke", order: 0 },
     });
     const food = await prisma.category.create({
-      data: { name: "Essen", icon: "🍔", order: 1 },
+      data: { name: "Essen", order: 1 },
     });
     const deposits = await prisma.category.create({
-      data: { name: "Pfand", icon: "♻️", order: 2 },
+      data: { name: "Pfand", order: 2 },
     });
 
-    // Deposit items
+    // Deposit items (negative prices = money returned)
     const flaschenpfand = await prisma.product.create({
       data: {
         name: "Flaschenpfand",
-        price: 0.25,
+        price: -0.25,
         categoryId: deposits.id,
         isDeposit: true,
         order: 0,
@@ -52,7 +52,7 @@ async function main() {
     const dosepfand = await prisma.product.create({
       data: {
         name: "Dosenpfand",
-        price: 0.25,
+        price: -0.25,
         isDeposit: true,
         categoryId: deposits.id,
         order: 1,
@@ -62,7 +62,7 @@ async function main() {
     const glaspfand = await prisma.product.create({
       data: {
         name: "Glaspfand",
-        price: 0.50,
+        price: -0.50,
         isDeposit: true,
         categoryId: deposits.id,
         order: 2,
@@ -72,34 +72,34 @@ async function main() {
     const fasspfand = await prisma.product.create({
       data: {
         name: "Fasskrügepfand",
-        price: 2.0,
+        price: -2.0,
         isDeposit: true,
         categoryId: deposits.id,
         order: 3,
       },
     });
 
-    // Drinks
+    // Drinks (price includes deposit — deposit line added separately on checkout)
     await prisma.product.createMany({
       data: [
-        { name: "Bier (0.5L)", price: 3.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 0 },
-        { name: "Bier (0.33L)", price: 3.0, categoryId: drinks.id, depositId: dosepfand.id, order: 1 },
-        { name: "Weizen (0.5L)", price: 4.0, categoryId: drinks.id, depositId: flaschenpfand.id, order: 2 },
-        { name: "Radler (0.5L)", price: 3.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 3 },
-        { name: "Cola", price: 2.5, categoryId: drinks.id, depositId: dosepfand.id, order: 4 },
-        { name: "Cola Zero", price: 2.5, categoryId: drinks.id, depositId: dosepfand.id, order: 5 },
-        { name: "Fanta", price: 2.5, categoryId: drinks.id, depositId: dosepfand.id, order: 6 },
-        { name: "Spezi", price: 2.5, categoryId: drinks.id, depositId: dosepfand.id, order: 7 },
-        { name: "Wasser (0.5L)", price: 2.0, categoryId: drinks.id, depositId: flaschenpfand.id, order: 8 },
-        { name: "Wasser (1L)", price: 3.0, categoryId: drinks.id, order: 9 },
-        { name: "Apfelsaft", price: 2.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 10 },
-        { name: "Orangensaft", price: 2.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 11 },
+        { name: "Bier", price: 3.5, volume: 0.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 0 },
+        { name: "Bier", price: 3.0, volume: 0.33, categoryId: drinks.id, depositId: dosepfand.id, order: 1 },
+        { name: "Weizen", price: 4.0, volume: 0.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 2 },
+        { name: "Radler", price: 3.5, volume: 0.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 3 },
+        { name: "Cola", price: 2.5, volume: 0.33, categoryId: drinks.id, depositId: dosepfand.id, order: 4 },
+        { name: "Cola Zero", price: 2.5, volume: 0.33, categoryId: drinks.id, depositId: dosepfand.id, order: 5 },
+        { name: "Fanta", price: 2.5, volume: 0.33, categoryId: drinks.id, depositId: dosepfand.id, order: 6 },
+        { name: "Spezi", price: 2.5, volume: 0.33, categoryId: drinks.id, depositId: dosepfand.id, order: 7 },
+        { name: "Wasser", price: 2.0, volume: 0.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 8 },
+        { name: "Wasser", price: 3.0, volume: 1.0, categoryId: drinks.id, order: 9 },
+        { name: "Apfelsaft", price: 2.5, volume: 0.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 10 },
+        { name: "Orangensaft", price: 2.5, volume: 0.5, categoryId: drinks.id, depositId: flaschenpfand.id, order: 11 },
         { name: "Kaffee", price: 2.0, categoryId: drinks.id, order: 12 },
         { name: "Espresso", price: 2.0, categoryId: drinks.id, order: 13 },
         { name: "Tee", price: 2.0, categoryId: drinks.id, order: 14 },
-        { name: "Wein (Glas)", price: 4.5, categoryId: drinks.id, depositId: glaspfand.id, order: 15 },
-        { name: "Sekt (Glas)", price: 5.0, categoryId: drinks.id, depositId: glaspfand.id, order: 16 },
-        { name: "Fassbier (1L Krug)", price: 8.0, categoryId: drinks.id, depositId: fasspfand.id, order: 17 },
+        { name: "Wein", price: 4.5, volume: 0.2, categoryId: drinks.id, depositId: glaspfand.id, order: 15 },
+        { name: "Sekt", price: 5.0, volume: 0.2, categoryId: drinks.id, depositId: glaspfand.id, order: 16 },
+        { name: "Fassbier", price: 8.0, volume: 1.0, categoryId: drinks.id, depositId: fasspfand.id, order: 17 },
       ],
     });
 
@@ -107,7 +107,7 @@ async function main() {
     await prisma.product.createMany({
       data: [
         { name: "Pretzel", price: 2.0, categoryId: food.id, order: 0 },
-        { name: "Breze mit Butter", price: 3.5, categoryId: food.id, order: 1 },
+        { name: "Pretzel mit Butter", price: 3.5, categoryId: food.id, order: 1 },
         { name: "Wurstsemmel", price: 3.0, categoryId: food.id, order: 2 },
         { name: "Käsesemmel", price: 3.0, categoryId: food.id, order: 3 },
         { name: "Pommes", price: 3.5, categoryId: food.id, order: 4 },

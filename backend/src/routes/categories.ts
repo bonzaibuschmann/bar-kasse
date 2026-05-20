@@ -33,7 +33,7 @@ router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Respons
     }
 
     const category = await prisma.category.create({
-      data: { name, icon, order: order || 0 },
+      data: { name, order: order || 0 },
     });
 
     res.status(201).json(category);
@@ -46,13 +46,12 @@ router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Respons
 router.put("/:id", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, icon, order } = req.body;
+    const { name, order } = req.body;
 
     const category = await prisma.category.update({
       where: { id: parseInt(id) },
       data: {
         ...(name !== undefined && { name }),
-        ...(icon !== undefined && { icon }),
         ...(order !== undefined && { order }),
       },
     });

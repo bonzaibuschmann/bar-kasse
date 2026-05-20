@@ -7,10 +7,6 @@ import ConfigPage from "./pages/ConfigPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 
-const API_BASE = "/api";
-
-export { API_BASE };
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>

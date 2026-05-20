@@ -1,7 +1,6 @@
 export interface Category {
   id: number;
   name: string;
-  icon: string | null;
   order: number;
   products: Product[];
 }
@@ -10,6 +9,7 @@ export interface Product {
   id: number;
   name: string;
   price: number;
+  volume: number | null;
   categoryId: number;
   isDeposit: boolean;
   active: boolean;
@@ -23,11 +23,12 @@ export interface Product {
 export interface CartItem {
   productId: number;
   productName: string;
+  volume: number | null;
   unitPrice: number;
   quantity: number;
   isDeposit: boolean;
-  depositFor: number | null; // links deposit to parent item
-  depositId: number | null; // the deposit product id for removal
+  depositFor: number | null;
+  depositId: number | null;
 }
 
 export interface Order {

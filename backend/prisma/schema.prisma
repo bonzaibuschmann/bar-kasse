@@ -18,7 +18,6 @@ model User {
 model Category {
   id       Int       @id @default(autoincrement())
   name     String
-  icon     String?
   order    Int       @default(0)
   products Product[]
 }
@@ -27,6 +26,7 @@ model Product {
   id                Int       @id @default(autoincrement())
   name              String
   price             Float
+  volume            Float?
   categoryId        Int
   category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   isDeposit         Boolean   @default(false)
