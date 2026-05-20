@@ -5,7 +5,11 @@ const prisma = new PrismaClient();
 
 async function main() {
   const adminUsername = process.env.ADMIN_USERNAME || "admin";
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    console.error("ADMIN_PASSWORD env var is required. Set it in .env");
+    process.exit(1);
+  }
 
   const existing = await prisma.user.findUnique({
     where: { username: adminUsername },
