@@ -17,6 +17,16 @@ docker compose exec backend-dev npx prisma migrate dev --name init
 docker compose exec backend-dev npx prisma db seed
 ```
 
+## Ports
+
+| Service | Port |
+|---------|------|
+| Production Frontend | `3000` |
+| Dev Frontend (hot reload) | `3001` |
+| Production Backend | `4000` |
+| Dev Backend | `4001` |
+| PostgreSQL | `5432` |
+
 ## Pages
 
 | Page | URL | Auth |
