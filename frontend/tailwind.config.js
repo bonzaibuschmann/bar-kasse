@@ -5,8 +5,8 @@ export default {
     extend: {
       colors: {
         bar: {
-          dark: "#1a1a2e",
-          mid: "#16213e",
+          dark: "#000000",
+          mid: "#111111",
           accent: "#e94560",
           gold: "#f5c518",
           green: "#4ecca3",

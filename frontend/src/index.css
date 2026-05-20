@@ -5,7 +5,6 @@
 html, body, #root {
   height: 100%;
   margin: 0;
-  overflow: hidden;
 }
 
 /* Touch-friendly scrollbar */
@@ -13,7 +12,7 @@ html, body, #root {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #1a1a2e;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
   background: #333;
