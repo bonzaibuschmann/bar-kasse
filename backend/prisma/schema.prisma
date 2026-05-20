@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  icon     String?
+  order    Int       @default(0)
+  products Product[]
+}
+
+model Product {
+  id                Int       @id @default(autoincrement())
+  name              String
+  price             Float
+  categoryId        Int
+  category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  isDeposit         Boolean   @default(false)
+  active            Boolean   @default(true)
+  order             Int       @default(0)
+  depositId         Int?
+  deposit           Product?  @relation("ProductDeposit", fields: [depositId], references: [id], onDelete: SetNull)
+  depositFor        Product[] @relation("ProductDeposit")
+  orderItems        OrderItem[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  total     Float
+  cashGiven Float?
+  changeDue Float?
+  register  String      @default("1")
+  note      String?
+  createdAt DateTime    @default(now())
+  items     OrderItem[]
+}
+
+model OrderItem {
+  id         Int     @id @default(autoincrement())
+  orderId    Int
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  Int
+  product    Product @relation(fields: [productId], references: [id])
+  quantity   Int     @default(1)
+  unitPrice  Float
+  isDeposit  Boolean @default(false)
+  depositFor Int?    // links this deposit item to the parent order item
+}

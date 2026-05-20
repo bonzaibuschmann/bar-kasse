@@ -1,0 +1,108 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: barkasse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: barkasse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret123}
+      POSTGRES_DB: barkasse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barkasse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---- DEVELOPMENT (hot reload) ----
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: barkasse-backend-dev
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://barkasse:${POSTGRES_PASSWORD:-secret123}@postgres:5432/barkasse
+      - JWT_SECRET=${JWT_SECRET:-change-this-to-a-random-string-in-production}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - PORT=4001
+    ports:
+      - "${DEV_BACKEND_PORT:-4001}:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: barkasse-frontend-dev
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://backend-dev:4001
+    ports:
+      - "${DEV_FRONTEND_PORT:-3001}:3001"
+    depends_on:
+      - backend-dev
+
+  # ---- PRODUCTION ----
+  backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: barkasse-backend-prod
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://barkasse:${POSTGRES_PASSWORD:-secret123}@postgres:5432/barkasse
+      - JWT_SECRET=${JWT_SECRET:-change-this-to-a-random-string-in-production}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - PORT=4000
+    ports:
+      - "${PROD_BACKEND_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend-prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: barkasse-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "${PROD_FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend-prod
+
+  # ---- AUTO-DEPLOY WEBHOOK ----
+  webhook:
+    image: node:20-alpine
+    container_name: barkasse-webhook
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./deploy-webhook.js:/app/deploy-webhook.js:ro
+      - ./:/opt/bar-kasse:ro
+    working_dir: /app
+    environment:
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-webhook-secret-change-me}
+      - REPO_PATH=/opt/bar-kasse
+    ports:
+      - "9000:9000"
+    command: ["node", "deploy-webhook.js"]
+    profiles:
+      - deploy
+
+volumes:
+  postgres_data:
