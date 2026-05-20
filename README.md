@@ -2,11 +2,6 @@
 
 Cash Register Web App for Bars — built for tablets, iPads, and touch devices.
 
-## URLs
-
-- **Dev (live reload):** `http://157.254.223.246:3001`
-- **Production:** `http://157.254.223.246:3000`
-
 ## Quick Start
 
 ```bash
@@ -45,4 +40,4 @@ docker compose exec backend-dev npx prisma db seed
 1. Stop all containers: `docker compose down`
 2. Copy the project folder (or `git clone`)
 3. `docker compose up -d`
-4. The app will be available at `http://localhost:3000` (prod) and `http://localhost:3001` (dev)
+4. The app will be available on your machine's IP at port 3000 (prod) and 3001 (dev)
