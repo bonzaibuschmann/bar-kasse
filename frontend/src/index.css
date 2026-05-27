@@ -86,6 +86,16 @@ html, body, #root {
   pointer-events: none;
 }
 
+/* Hide resize handles outside edit mode (handles created by staticGrid:false) */
+.grid-stack:not(.grid-edit-mode) .ui-resizable-handle {
+  display: none !important;
+}
+
+/* In edit mode, override GridStack's autohide — show handles always */
+.grid-edit-mode .ui-resizable-autohide > .ui-resizable-handle {
+  display: block !important;
+}
+
 .grid-stack-placeholder > .placeholder-content {
   border: 2px dashed rgba(255, 255, 255, 0.2);
   background-color: rgba(255, 255, 255, 0.05);

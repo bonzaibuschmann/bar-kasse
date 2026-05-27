@@ -138,15 +138,31 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
     };
   }, [saveLayoutRef, saveCurrentLayout]);
 
-  // Rebuild grid when products change or rebuildKey is bumped
+  // Rebuild grid when products change or rebuildKey is bumped.
+  // Skip during edit mode — bumping buildKey would destroy the existing grid
+  // (React cleanup runs gs.destroy) but the rebuild effect returns early when
+  // editModeRef is true, leaving orphan DOM elements with no GridStack.
   useEffect(() => {
-    setBuildKey((k) => k + 1);
+    if (!editModeRef.current) {
+      setBuildKey((k) => k + 1);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productKey, rebuildKey]);
 
+  // Rebuild grid when layouts change (e.g. after save + WebSocket sync)
+  // Skip during edit mode to preserve user's current drag/resize
+  useEffect(() => {
+    if (!editModeRef.current) {
+      setBuildKey((k) => k + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layouts]);
+
   // Build the grid DOM + init GridStack
+  // Skip during edit mode — don't destroy grid while user is dragging
   useEffect(() => {
     if (!containerRef.current) return;
+    if (editModeRef.current) return;
     containerRef.current.innerHTML = "";
 
     // Build position lookups from unified layouts array
@@ -362,7 +378,7 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
         cellHeight: computedCellHeight,
         animate: false,
         float: true,
-        staticGrid: true,
+        staticGrid: false, // Init non-static so resize handles are created. Static state toggled in useEffect below.
         margin: MARGIN,
         minW: 1,
         minH: 1,
@@ -378,6 +394,15 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
     gs.on("dragstop", () => { setTimeout(() => { draggingRef.current = false; }, 50); });
     gs.on("resizestop", () => { setTimeout(() => { draggingRef.current = false; }, 50); });
 
+    // Force-enable move and resize — belt-and-suspenders for any init-time disable
+    gs.enableMove(true, true);
+    gs.enableResize(true, true);
+    // Add grid-edit-mode class if we're entering edit mode immediately (rare, but safe)
+    if (editModeRef.current && !dialogOpen) {
+      container.classList.add("grid-edit-mode");
+    }
+    // Non-edit-mode lock is handled by CSS: .grid-stack:not(.grid-edit-mode) .ui-resizable-handle
+
     return () => {
       gs.destroy(false);
       gsRef.current = null;
@@ -385,7 +410,7 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buildKey]);
 
-  // Toggle edit mode on existing grid using setStatic.
+  // Toggle edit mode on existing grid.
   // buildKey is in the dependency array so that when the grid is rebuilt
   // (e.g. because targetProducts changes at the same time editMode toggles),
   // the static state is re-applied to the fresh GridStack instance.
@@ -394,10 +419,8 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
     if (!gs) return;
     const interactive = editMode && !dialogOpen;
     if (interactive) {
-      gs.setStatic(false);
       containerRef.current?.classList.add("grid-edit-mode");
     } else {
-      gs.setStatic(true);
       containerRef.current?.classList.remove("grid-edit-mode");
     }
   }, [editMode, dialogOpen, buildKey]);

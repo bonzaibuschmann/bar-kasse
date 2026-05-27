@@ -179,15 +179,15 @@ export default function Basket({ cart, total, removeItem, removeDepositOnly, cha
             <div
               key={domKey}
               className={`mb-1 rounded ${isRemoving ? "basket-row-removing" : isFlashing ? "basket-row-flash" : ""} ${
-                isContainer ? "pl-5 border-l-2 border-blue-800" : item.isDeposit ? "pl-3 border-l-2 border-yellow-700" : ""
+                isContainer ? "pl-8 border-l-2 border-blue-800" : item.isDeposit ? "pl-3 border-l-2 border-yellow-700" : ""
               }`}
             >
-              <div className="flex items-center justify-between py-1.5">
+              <div className={`flex items-center justify-between ${isContainer ? "py-0.5" : "py-1.5"}`}>
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {item.isDeposit && (
                     <span className="text-yellow-500 text-xs">♻️</span>
                   )}
-                  <span className={`text-sm truncate ${isContainer ? "text-gray-500 text-xs" : item.isDeposit ? "text-gray-500" : ""}`}>
+                  <span className={`text-sm truncate ${isContainer ? "text-gray-500 text-[10px]" : item.isDeposit ? "text-gray-500" : ""}`}>
                     {item.productName}
                   </span>
                   {!item.isDeposit && !isContainer && item.volume && (
@@ -214,8 +214,8 @@ export default function Basket({ cart, total, removeItem, removeDepositOnly, cha
                     </div>
                   )}
 
-                  <span className={`text-sm font-mono w-14 text-right ${
-                    isContainer ? "text-blue-400" : item.isDeposit ? "text-yellow-500" : "text-emerald-400"
+                  <span className={`font-mono w-14 text-right ${
+                    isContainer ? "text-blue-400 text-[10px]" : item.isDeposit ? "text-yellow-500" : "text-sm text-emerald-400"
                   }`}>
                     {(item.unitPrice * item.quantity).toFixed(2).replace(".", ",")}€
                   </span>
@@ -223,7 +223,7 @@ export default function Basket({ cart, total, removeItem, removeDepositOnly, cha
                   {isContainer ? (
                     <button
                       onClick={() => handleRemove(index)}
-                      className="w-6 h-6 bg-gray-800 rounded text-xs touch-button flex items-center justify-center text-red-400 hover:text-red-300"
+                      className="w-5 h-5 bg-gray-800 rounded text-[10px] touch-button flex items-center justify-center text-red-400 hover:text-red-300"
                       title="Remove container"
                     >
                       ✕
