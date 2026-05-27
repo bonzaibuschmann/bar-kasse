@@ -28,6 +28,7 @@ interface Order {
 interface Props {
   onClose: () => void;
   onLoadCopy: (items: OrderItem[]) => void;
+  onEditOrder: (items: OrderItem[]) => void;
   registers: { id: number; name: string }[];
   defaultRegisterId: number | null;
 }
@@ -45,7 +46,7 @@ function formatTime(iso: string): string {
   return `${dd}.${MM}. ${hh}:${mm}`;
 }
 
-export default function OrderHistoryDialog({ onClose, onLoadCopy, registers, defaultRegisterId }: Props) {
+export default function OrderHistoryDialog({ onClose, onLoadCopy, onEditOrder, registers, defaultRegisterId }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -106,7 +107,7 @@ export default function OrderHistoryDialog({ onClose, onLoadCopy, registers, def
 
   return (
     <Modal onClose={onClose}>
-      <div className="bg-[#111] border border-gray-800 rounded-2xl p-6 w-full max-w-[90vw] mx-4 shadow-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-[#111] border border-gray-800 rounded-2xl p-6 shadow-2xl flex flex-col" style={{ width: "calc(100vw - 12vh)", height: "88vh" }}>
         <h2 className="text-lg font-bold text-center mb-4 text-yellow-400">Order History</h2>
 
         {/* Register filter */}
@@ -167,7 +168,7 @@ export default function OrderHistoryDialog({ onClose, onLoadCopy, registers, def
                           Load Copy
                         </button>
                         <button
-                          onClick={() => {/* TODO: Edit order */}}
+                          onClick={() => onEditOrder(order.items)}
                           className="text-xs px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 touch-button"
                         >
                           Edit

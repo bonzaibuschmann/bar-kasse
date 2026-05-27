@@ -503,6 +503,18 @@ export default function RegisterPage() {
 
   // Load order items into cart from history (deposits are handled by addToCart logic)
   function handleLoadCopy(items: Array<{ productId: number; product: { id: number; name: string; volume: number | null }; quantity: number; unitPrice: number; isDeposit: boolean; depositFor: number | null }>) {
+    loadOrderItems(items);
+    setShowHistory(false);
+  }
+
+  // Edit an order from history — load items and switch to order panel
+  function handleEditOrder(items: Array<{ productId: number; product: { id: number; name: string; volume: number | null }; quantity: number; unitPrice: number; isDeposit: boolean; depositFor: number | null }>) {
+    loadOrderItems(items);
+    switchView("order");
+    setShowHistory(false);
+  }
+
+  function loadOrderItems(items: Array<{ productId: number; product: { id: number; name: string; volume: number | null }; quantity: number; unitPrice: number; isDeposit: boolean; depositFor: number | null }>) {
     pushUndo();
     const newCart: CartItem[] = [];
     for (const item of items) {
@@ -534,7 +546,6 @@ export default function RegisterPage() {
       }
     }
     setCart(newCart);
-    setShowHistory(false);
   }
 
   function addSpecialItem(price: number) {
@@ -1103,6 +1114,7 @@ export default function RegisterPage() {
         <OrderHistoryDialog
           onClose={() => setShowHistory(false)}
           onLoadCopy={handleLoadCopy}
+          onEditOrder={handleEditOrder}
           registers={allRegisters}
           defaultRegisterId={selectedRegisterId}
         />
