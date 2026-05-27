@@ -9,9 +9,10 @@ export interface Register {
 
 export interface GridLayout {
   id: number;
-  itemType: string; // "Product" | "InboundContainer" | "OutboundContainer" | "Special"
+  itemType: string; // "Product" | "Special"
   productId: number | null;
-  containerId: number | null;
+  inboundContainerId: number | null;
+  outboundContainerId: number | null;
   xPosition: number;
   yPosition: number;
   width: number;

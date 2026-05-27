@@ -56,7 +56,8 @@ model Container {
   outboundColor   String?
   outboundIcon    String?
   products        Product[]
-  gridLayouts     GridLayout[]
+  inboundLayouts  GridLayout[] @relation("InboundLayout")
+  outboundLayouts GridLayout[] @relation("OutboundLayout")
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 }
@@ -124,16 +125,18 @@ model StaffMember {
 }
 
 model GridLayout {
-  id          Int        @id @default(autoincrement())
-  itemType    String     @default("Product") // "Product" | "InboundContainer" | "OutboundContainer" | "Special"
-  productId   Int?       @unique
-  product     Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
-  containerId Int?
-  container   Container? @relation(fields: [containerId], references: [id], onDelete: SetNull)
-  xPosition   Int        @default(0)
-  yPosition   Int        @default(0)
-  width       Int        @default(1)
-  height      Int        @default(1)
+  id                  Int        @id @default(autoincrement())
+  itemType            String     @default("Product") // "Product" | "Special"
+  productId           Int?       @unique
+  product             Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  inboundContainerId  Int?
+  inboundContainer    Container? @relation("InboundLayout", fields: [inboundContainerId], references: [id], onDelete: SetNull)
+  outboundContainerId Int?
+  outboundContainer   Container? @relation("OutboundLayout", fields: [outboundContainerId], references: [id], onDelete: SetNull)
+  xPosition           Int        @default(0)
+  yPosition           Int        @default(0)
+  width               Int        @default(1)
+  height              Int        @default(1)
 }
 
 model SpecialBox {

@@ -8,7 +8,8 @@ const router = Router();
 type LayoutItem = {
   itemType: string;
   productId?: number | null;
-  containerId?: number | null;
+  inboundContainerId?: number | null;
+  outboundContainerId?: number | null;
   xPosition: number;
   yPosition: number;
   width: number;
@@ -38,7 +39,7 @@ router.put("/", authMiddleware, requireAdmin, async (req: Request, res: Response
     }
 
     // Validate item types
-    const validTypes = ["Product", "InboundContainer", "OutboundContainer", "Special"];
+    const validTypes = ["Product", "Special"];
     for (const item of items) {
       if (!validTypes.includes(item.itemType)) {
         res.status(400).json({ error: `Invalid itemType: ${item.itemType}` });
@@ -54,7 +55,8 @@ router.put("/", authMiddleware, requireAdmin, async (req: Request, res: Response
           data: items.map((item) => ({
             itemType: item.itemType,
             productId: item.itemType === "Product" ? item.productId : null,
-            containerId: (item.itemType === "InboundContainer" || item.itemType === "OutboundContainer") ? item.containerId : null,
+            inboundContainerId: item.inboundContainerId ?? null,
+            outboundContainerId: item.outboundContainerId ?? null,
             xPosition: item.xPosition ?? 0,
             yPosition: item.yPosition ?? 0,
             width: item.width ?? 1,

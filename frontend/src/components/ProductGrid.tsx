@@ -79,18 +79,20 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
             return {
               itemType: "Special",
               productId: null,
-              containerId: null,
+              inboundContainerId: null,
+              outboundContainerId: null,
               ...pos,
             };
           }
 
           const containerInfo = containerIdFromVirtual(id);
           if (containerInfo) {
-            // Container virtual product
+            // Container virtual product — directional FK
             return {
-              itemType: containerInfo.isReturn ? "InboundContainer" : "OutboundContainer",
+              itemType: "Product",
               productId: null,
-              containerId: containerInfo.containerId,
+              inboundContainerId: containerInfo.isReturn ? containerInfo.containerId : null,
+              outboundContainerId: containerInfo.isReturn ? null : containerInfo.containerId,
               ...pos,
             };
           }
@@ -99,7 +101,8 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
           return {
             itemType: "Product",
             productId: id,
-            containerId: null,
+            inboundContainerId: null,
+            outboundContainerId: null,
             ...pos,
           };
         });
@@ -165,9 +168,11 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
         saved.set(`product:${l.productId}`, { x: l.xPosition, y: l.yPosition, w: l.width, h: l.height });
       } else if (l.itemType === "Special") {
         saved.set("special", { x: l.xPosition, y: l.yPosition, w: l.width, h: l.height });
-      } else if ((l.itemType === "InboundContainer" || l.itemType === "OutboundContainer") && l.containerId != null) {
-        const offset = l.itemType === "InboundContainer" ? 0 : 1;
-        const vid = -(5000 + l.containerId * 2 + offset);
+      } else if (l.inboundContainerId != null) {
+        const vid = -(5000 + l.inboundContainerId * 2);
+        saved.set(`container:${vid}`, { x: l.xPosition, y: l.yPosition, w: l.width, h: l.height });
+      } else if (l.outboundContainerId != null) {
+        const vid = -(5000 + l.outboundContainerId * 2 + 1);
         saved.set(`container:${vid}`, { x: l.xPosition, y: l.yPosition, w: l.width, h: l.height });
       }
     }
