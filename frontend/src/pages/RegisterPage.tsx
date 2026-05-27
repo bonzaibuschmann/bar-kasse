@@ -703,6 +703,14 @@ export default function RegisterPage() {
         await saveLayoutRef.current();
       }
 
+      // Apply any config that was buffered during save.
+      // The PUT /api/layouts triggers a WebSocket broadcast with the new layouts,
+      // but suppression was still active — the config got buffered. We must apply
+      // it before clearing suppression, otherwise layouts revert to pre-edit state.
+      if (hasSuppressedConfig()) {
+        flushSuppressedConfig();
+      }
+
       // Exit edit mode — backend broadcasts will keep other clients in sync
       setConfigSuppressed(false);
       setEditMode(false);
