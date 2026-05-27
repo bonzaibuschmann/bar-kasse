@@ -128,6 +128,13 @@ export default function Basket({ cart, total, removeItem, removeDepositOnly, cha
     }
   }, [cart, changeQuantity]);
 
+  // Precompute which rows have an attached row (container/deposit) below them
+  const hasAttachedBelow = new Set<number>();
+  cart.forEach((ci, i) => {
+    if (ci.containerFor !== undefined) hasAttachedBelow.add(ci.containerFor);
+    if (ci.depositFor !== undefined) hasAttachedBelow.add(ci.depositFor);
+  });
+
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800">
@@ -175,12 +182,13 @@ export default function Basket({ cart, total, removeItem, removeDepositOnly, cha
           const key = itemKey(index, item);
           const isRemoving = removingKeys.has(key);
           const domKey = isFlashing ? `${key}-f${flashKeys.get(item.productId) ?? 0}` : key;
+          const noMargin = hasAttachedBelow.has(index);
           return (
             <div
               key={domKey}
-              className={`mb-1 rounded ${isRemoving ? "basket-row-removing" : isFlashing ? "basket-row-flash" : ""} ${
+              className={`rounded ${isRemoving ? "basket-row-removing" : isFlashing ? "basket-row-flash" : ""} ${
                 isContainer ? "pl-8 border-l-2 border-blue-800" : item.isDeposit ? "pl-3 border-l-2 border-yellow-700" : ""
-              }`}
+              } ${noMargin ? "" : "mb-1"}`}
             >
               <div className={`flex items-center justify-between ${isContainer ? "py-0.5" : "py-1.5"}`}>
                 <div className="flex items-center gap-2 flex-1 min-w-0">
