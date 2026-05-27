@@ -20,6 +20,15 @@ export interface GridLayout {
   icon: string | null;
 }
 
+export interface SpecialBox {
+  id: number;
+  name: string;
+  price: number;
+  color: string | null;
+  icon: string | null;
+  image: string | null;
+}
+
 interface DataContextType {
   categories: Category[];
   allProducts: Product[];
@@ -27,6 +36,7 @@ interface DataContextType {
   staffGroups: StaffGroup[];
   containers: Container[];
   layouts: GridLayout[];
+  specialBox: SpecialBox | null;
   loading: boolean;
   connected: boolean;
   editProducts: Product[] | null;
@@ -54,6 +64,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [staffGroups, setStaffGroups] = useState<StaffGroup[]>([]);
   const [containers, setContainers] = useState<Container[]>([]);
   const [layouts, setLayouts] = useState<GridLayout[]>([]);
+  const [specialBox, setSpecialBox] = useState<SpecialBox | null>(null);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(true);
   const [editProducts, setEditProducts] = useState<Product[] | null>(null);
@@ -67,6 +78,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     staffGroups: StaffGroup[];
     layouts?: GridLayout[];
     containers?: Container[];
+    specialBox?: SpecialBox | null;
   } | null>(null);
 
   const applyConfig = useCallback((data: {
@@ -76,6 +88,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     staffGroups: StaffGroup[];
     layouts?: GridLayout[];
     containers?: Container[];
+    specialBox?: SpecialBox | null;
   }) => {
     setCategories(data.categories);
     setAllProducts(data.products);
@@ -83,6 +96,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setStaffGroups(data.staffGroups || []);
     setLayouts(data.layouts || []);
     setContainers(data.containers || []);
+    setSpecialBox(data.specialBox || null);
     setLoading(false);
   }, []);
 
@@ -152,6 +166,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
               staffGroups: msg.staffGroups || [],
               layouts: msg.layouts || [],
               containers: msg.containers || [],
+              specialBox: msg.specialBox || null,
             };
             if (suppressRef.current) {
               suppressedConfigRef.current = cfg;
@@ -182,7 +197,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider value={{
-      categories, allProducts, registers, staffGroups, containers, layouts, loading, connected,
+      categories, allProducts, registers, staffGroups, containers, layouts, specialBox, loading, connected,
       editProducts, startEditMode, updateEditProduct, endEditMode,
       setConfigSuppressed, hasSuppressedConfig, flushSuppressedConfig, commitProductEdits
     }}>

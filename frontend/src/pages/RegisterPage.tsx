@@ -163,7 +163,7 @@ function CalcPanel({ handedAmount, setHandedAmount, billCounts, setBillCounts, c
 }
 
 export default function RegisterPage() {
-  const { categories, registers: allRegisters, staffGroups, containers, layouts, connected, editProducts, startEditMode, updateEditProduct, endEditMode, setConfigSuppressed, hasSuppressedConfig, flushSuppressedConfig, commitProductEdits } = useData();
+  const { categories, registers: allRegisters, staffGroups, containers, layouts, specialBox, connected, editProducts, startEditMode, updateEditProduct, endEditMode, setConfigSuppressed, hasSuppressedConfig, flushSuppressedConfig, commitProductEdits } = useData();
   const [selectedRegisterId, setSelectedRegisterId] = useState<number | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const undoStackRef = useRef<CartItem[][]>([]);
@@ -184,17 +184,27 @@ export default function RegisterPage() {
   const [specialCents, setSpecialCents] = useState(0);
   const [specialHasDecimal, setSpecialHasDecimal] = useState(false);
   const [specialDecimals, setSpecialDecimals] = useState(0);
-  const [specialProduct, setSpecialProduct] = useState<Product>(() => {
-    // Restore special product config from localStorage
-    const saved = typeof localStorage !== "undefined" ? localStorage.getItem("specialProduct") : null;
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return { id: -1, name: parsed.name || "Special", price: parsed.price || 5, volume: null, active: true, display: true, categoryId: -1, isDeposit: false, deposit: null, depositId: null, color: parsed.color || "#b45309", image: parsed.image || null, defaultContainerId: null, defaultContainer: null };
-      } catch {}
-    }
-    return { id: -1, name: "Special", price: 5, volume: null, active: true, display: true, categoryId: -1, isDeposit: false, deposit: null, depositId: null, color: "#b45309", defaultContainerId: null, defaultContainer: null };
-  });
+  // Special product — server-driven from SpecialBox table
+  const specialProduct = useMemo<Product>(() => {
+    const box = specialBox;
+    return {
+      id: -1,
+      name: box?.name || "Special",
+      price: box?.price ?? 5,
+      volume: null,
+      active: true,
+      display: true,
+      categoryId: -1,
+      isDeposit: false,
+      deposit: null,
+      depositId: null,
+      color: box?.color || "#b45309",
+      icon: box?.icon || null,
+      image: box?.image || null,
+      defaultContainerId: null,
+      defaultContainer: null,
+    } as Product;
+  }, [specialBox]);
   // Editable overrides for container virtual products (name, price, active, image — color moved to GridLayout)
   const [containerOverrides, setContainerOverrides] = useState<Record<number, { name?: string; price?: number; active?: boolean; image?: string | null }>>(() => {
     const saved = typeof localStorage !== "undefined" ? localStorage.getItem("containerOverrides") : null;
@@ -203,16 +213,10 @@ export default function RegisterPage() {
   });
   const [admin, setAdmin] = useState(isLoggedIn());
   const saveLayoutRef = useRef<(() => Promise<void>) | null>(null);
-  const editBufferRef = useRef<Array<{ productId: number; name: string; price: number; volume: number | null; active: boolean; display: boolean; categoryId: number; color: string; image?: string | null; defaultContainerId?: number | null }>>([]);
+  const editBufferRef = useRef<Array<{ productId: number; name: string; price: number; volume: number | null; active: boolean; display: boolean; categoryId: number; color: string; icon?: string | null; image?: string | null; defaultContainerId?: number | null }>>([]);
 
-  // Effective special product — color from GridLayout takes precedence
-  const effectiveSpecialProduct = useMemo(() => {
-    const specialLayout = layouts.find(l => l.itemType === "Special");
-    if (specialLayout?.color) {
-      return { ...specialProduct, color: specialLayout.color };
-    }
-    return specialProduct;
-  }, [specialProduct, layouts]);
+  // effectiveSpecialProduct is now merged into specialProduct above
+  // (color overlay from GridLayout handled in the specialProduct useMemo)
 
   // Build virtual container products: return (←) and additional (+) per container
   // Color comes from GridLayout (synced across clients); localStorage overrides are fallback
@@ -679,12 +683,15 @@ export default function RegisterPage() {
       // Send all buffered product changes
       for (const data of bufferedEdits) {
         if (data.productId === -1) {
-          // Special product — update local state, persist name/price/image to localStorage (color is now in GridLayout)
-          setSpecialProduct(prev => {
-            const updated = { ...prev, ...data, id: -1 };
-            localStorage.setItem("specialProduct", JSON.stringify({ name: updated.name, price: updated.price, image: updated.image }));
-            return updated;
-          });
+          // Special product — persist to server via PUT /api/special-box
+          try {
+            await apiFetch("/special-box", {
+              method: "PUT",
+              body: JSON.stringify({ name: data.name, price: data.price, color: data.color, icon: data.icon, image: data.image }),
+            });
+          } catch (err: any) {
+            console.error("Failed to save special box:", err);
+          }
           continue;
         }
         if (data.productId < -1) {
@@ -765,9 +772,9 @@ export default function RegisterPage() {
             onAddToCart={addToCart}
             onEditProduct={(p) => setEditingProduct(p)}
             saveLayoutRef={saveLayoutRef}
-            specialProduct={effectiveSpecialProduct}
+            specialProduct={specialProduct}
             onTapSpecial={handleTapSpecial}
-            onEditSpecial={() => setEditingProduct({ ...effectiveSpecialProduct, id: -1 } as Product)}
+            onEditSpecial={() => setEditingProduct({ ...specialProduct, id: -1 } as Product)}
             containerProducts={containerProducts}
             onTapContainer={handleTapContainer}
           />

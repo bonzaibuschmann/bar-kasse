@@ -119,3 +119,14 @@ model GridLayout {
   color       String?
   icon        String?
 }
+
+model SpecialBox {
+  id        Int      @id @default(autoincrement())
+  name      String   @default("Special")
+  price     Float    @default(5)
+  color     String?  @default("#b45309")
+  icon      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

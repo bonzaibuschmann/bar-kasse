@@ -53,7 +53,7 @@ async function sendConfigTo(ws: WebSocket) {
 }
 
 async function buildConfigPayload() {
-  const [categories, productsRaw, registers, staffGroups, layoutsRaw, containers] = await Promise.all([
+  const [categories, productsRaw, registers, staffGroups, layoutsRaw, containers, specialBox] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
       include: {
@@ -81,6 +81,7 @@ async function buildConfigPayload() {
     }),
     prisma.$queryRawUnsafe(`SELECT * FROM "GridLayout"`) as Promise<any[]>,
     prisma.$queryRawUnsafe(`SELECT * FROM "Container" ORDER BY name`) as Promise<any[]>,
+    prisma.specialBox.findFirst(),
   ]);
 
   const products = (productsRaw as any[]).map((p: any) => ({
@@ -113,6 +114,7 @@ async function buildConfigPayload() {
     staffGroups,
     layouts: layoutsRaw,
     containers,
+    specialBox,
   };
 }
 

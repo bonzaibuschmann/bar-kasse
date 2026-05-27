@@ -11,6 +11,7 @@ import registerRoutes from "./routes/registers";
 import staffRoutes from "./routes/staff";
 import layoutRoutes from "./routes/layouts";
 import containerRoutes from "./routes/containers";
+import specialBoxRoutes from "./routes/special-box";
 import { initWebSocket } from "./websocket";
 
 export const prisma = new PrismaClient();
@@ -36,6 +37,7 @@ app.use("/api/registers", registerRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/layouts", layoutRoutes);
 app.use("/api/containers", containerRoutes);
+app.use("/api/special-box", specialBoxRoutes);
 
 // Create HTTP server and attach WebSocket
 const server = http.createServer(app);
