@@ -77,6 +77,108 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/orders/:id — edit existing order (creates revision, keeps same ID)
+router.put("/:id", async (req: Request, res: Response) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    const { items, cashGiven, registerId, note, customerType }: {
+      items: CartItem[];
+      cashGiven?: number;
+      registerId?: number;
+      note?: string;
+      customerType?: string;
+    } = req.body;
+
+    if (!items || items.length === 0) {
+      res.status(400).json({ error: "Items required" });
+      return;
+    }
+
+    const existing = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    // Fetch product prices
+    const productIds = items.map((item) => item.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+    });
+    const productMap = new Map(products.map((p) => [p.id, p]));
+
+    let total = 0;
+    const orderItems = items.map((item) => {
+      const product = productMap.get(item.productId);
+      if (!product) throw new Error(`Product ${item.productId} not found`);
+      const unitPrice = product.price;
+      total += unitPrice * item.quantity;
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice,
+        isDeposit: item.isDeposit,
+        depositFor: item.depositFor,
+      };
+    });
+
+    total = Math.round(total * 100) / 100;
+    const cash = cashGiven !== undefined ? parseFloat(String(cashGiven)) : null;
+    const change = cash !== null ? Math.round((cash - total) * 100) / 100 : null;
+
+    const order = await prisma.$transaction(async (tx) => {
+      // Save revision of previous state
+      await tx.orderRevision.create({
+        data: {
+          orderId,
+          total: existing.total,
+          cashGiven: existing.cashGiven,
+          changeDue: existing.changeDue,
+          note: existing.note,
+          customerType: existing.customerType,
+          items: JSON.stringify(existing.items.map((oi) => ({
+            productId: oi.productId,
+            quantity: oi.quantity,
+            unitPrice: oi.unitPrice,
+            isDeposit: oi.isDeposit,
+            depositFor: oi.depositFor,
+          }))),
+        },
+      });
+
+      // Delete old items
+      await tx.orderItem.deleteMany({ where: { orderId } });
+
+      // Update order with new data
+      return tx.order.update({
+        where: { id: orderId },
+        data: {
+          total,
+          cashGiven: cash,
+          changeDue: change,
+          registerId: registerId || null,
+          note: note || null,
+          customerType: customerType || "Guest",
+          items: { create: orderItems },
+        },
+        include: {
+          items: { include: { product: true } },
+          register: true,
+        },
+      });
+    });
+
+    res.json(order);
+  } catch (err: any) {
+    console.error("Order edit error:", err);
+    res.status(500).json({ error: err.message || "Server error" });
+  }
+});
+
 // Get recent orders (admin only — for dashboard)
 router.get("/recent", async (req: Request, res: Response) => {
   try {
@@ -120,6 +222,20 @@ router.get("/", async (req: Request, res: Response) => {
     res.json({ orders, hasMore });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get order revisions
+router.get("/:id/revisions", async (req: Request, res: Response) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    const revisions = await prisma.orderRevision.findMany({
+      where: { orderId },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(revisions);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Server error" });
   }
 });
 

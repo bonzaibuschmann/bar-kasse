@@ -62,16 +62,17 @@ model Container {
 }
 
 model Order {
-  id           Int         @id @default(autoincrement())
+  id           Int            @id @default(autoincrement())
   total        Float
   cashGiven    Float?
   changeDue    Float?
   registerId   Int?
-  register     Register?   @relation(fields: [registerId], references: [id], onDelete: SetNull)
+  register     Register?      @relation(fields: [registerId], references: [id], onDelete: SetNull)
   note         String?
-  customerType String      @default("Guest")
-  createdAt    DateTime    @default(now())
+  customerType String         @default("Guest")
+  createdAt    DateTime       @default(now())
   items        OrderItem[]
+  revisions    OrderRevision[]
 }
 
 model OrderItem {
@@ -84,6 +85,19 @@ model OrderItem {
   unitPrice  Float
   isDeposit  Boolean @default(false)
   depositFor Int?    // links this deposit item to the parent order item
+}
+
+model OrderRevision {
+  id           Int      @id @default(autoincrement())
+  orderId      Int
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  total        Float
+  cashGiven    Float?
+  changeDue    Float?
+  note         String?
+  customerType String
+  items        String   // JSON snapshot of previous OrderItems
+  createdAt    DateTime @default(now())
 }
 
 model Register {

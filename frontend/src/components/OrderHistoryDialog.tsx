@@ -28,7 +28,7 @@ interface Order {
 interface Props {
   onClose: () => void;
   onLoadCopy: (items: OrderItem[]) => void;
-  onEditOrder: (items: OrderItem[]) => void;
+  onEditOrder: (orderId: number, items: OrderItem[]) => void;
   registers: { id: number; name: string }[];
   defaultRegisterId: number | null;
 }
@@ -168,7 +168,7 @@ export default function OrderHistoryDialog({ onClose, onLoadCopy, onEditOrder, r
                           Load Copy
                         </button>
                         <button
-                          onClick={() => onEditOrder(order.items)}
+                          onClick={() => onEditOrder(order.id, order.items)}
                           className="text-xs px-2 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 touch-button"
                         >
                           Edit

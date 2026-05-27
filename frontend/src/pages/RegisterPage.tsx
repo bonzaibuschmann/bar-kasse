@@ -181,6 +181,7 @@ export default function RegisterPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [editedOrderId, setEditedOrderId] = useState<number | null>(null);
   const [specialCents, setSpecialCents] = useState(0);
   const [specialHasDecimal, setSpecialHasDecimal] = useState(false);
   const [specialDecimals, setSpecialDecimals] = useState(0);
@@ -460,10 +461,19 @@ export default function RegisterPage() {
         productId: item.productId, quantity: item.quantity,
         isDeposit: item.isDeposit, depositFor: item.depositFor,
       }));
-      await apiFetch("/orders", {
-        method: "POST",
-        body: JSON.stringify({ items, cashGiven, registerId: selectedRegisterId, customerType }),
-      });
+      const body = { items, cashGiven, registerId: selectedRegisterId, customerType };
+      if (editedOrderId !== null) {
+        await apiFetch(`/orders/${editedOrderId}`, {
+          method: "PUT",
+          body: JSON.stringify(body),
+        });
+        setEditedOrderId(null);
+      } else {
+        await apiFetch("/orders", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+      }
       clearCart();
       setCustomerType("Guest");
       setHandedAmount(0);
@@ -508,9 +518,10 @@ export default function RegisterPage() {
     setShowHistory(false);
   }
 
-  // Edit an order from history — load items and switch to order panel
-  function handleEditOrder(items: Array<{ productId: number; product: { id: number; name: string; volume: number | null }; quantity: number; unitPrice: number; isDeposit: boolean; depositFor: number | null }>) {
+  // Edit an order from history — load items, set editedOrderId, switch to order panel
+  function handleEditOrder(orderId: number, items: Array<{ productId: number; product: { id: number; name: string; volume: number | null }; quantity: number; unitPrice: number; isDeposit: boolean; depositFor: number | null }>) {
     loadOrderItems(items);
+    setEditedOrderId(orderId);
     switchView("order");
     setShowHistory(false);
   }
@@ -960,18 +971,29 @@ export default function RegisterPage() {
 
           {/* Checkout button — double tap */}
           <div className="px-3 pb-3 pt-1">
+            {editedOrderId !== null && (
+              <div className="text-center text-xs text-amber-400 mb-1">
+                Editing Order #{editedOrderId}
+                <button
+                  onClick={() => { setEditedOrderId(null); clearCart(); }}
+                  className="ml-2 text-gray-500 hover:text-gray-300 underline"
+                >
+                  cancel
+                </button>
+              </div>
+            )}
             <button
               onClick={handleCheckoutTap}
               disabled={cart.length === 0 || checkoutPhase === 2}
-              className="relative w-full py-4 rounded-xl text-xl font-bold touch-button transition-all overflow-hidden
-                disabled:opacity-30 disabled:cursor-not-allowed text-white bg-rose-600 hover:bg-rose-500"
+              className={`relative w-full py-4 rounded-xl text-xl font-bold touch-button transition-all overflow-hidden
+                disabled:opacity-30 disabled:cursor-not-allowed text-white ${editedOrderId !== null ? "bg-amber-600 hover:bg-amber-500" : "bg-rose-600 hover:bg-rose-500"}`}
             >
               <div
                 className="absolute inset-0 bg-rose-800 transition-all duration-300 ease-out"
                 style={{ width: checkoutPhase === 0 ? "0%" : checkoutPhase === 1 ? "50%" : "100%" }}
               />
               <span className="relative z-10">
-                {checkoutPhase === 0 && "Checkout"}
+                {checkoutPhase === 0 && (editedOrderId !== null ? `Update Order #${editedOrderId}` : "Checkout")}
                 {checkoutPhase === 1 && "TAP AGAIN"}
                 {checkoutPhase === 2 && "Submitting..."}
               </span>
