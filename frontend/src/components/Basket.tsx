@@ -187,7 +187,7 @@ export default function Basket({ cart, total, removeItem, removeDepositOnly, cha
             <div
               key={domKey}
               className={`rounded ${isRemoving ? "basket-row-removing" : isFlashing ? "basket-row-flash" : ""} ${
-                isContainer ? "pl-8 border-l-2 border-blue-800" : item.isDeposit ? "pl-3 border-l-2 border-yellow-700" : ""
+                isContainer ? "pl-8" : item.isDeposit ? "pl-3 border-l-2 border-yellow-700" : ""
               } ${noMargin ? "" : "mb-1"}`}
             >
               <div className={`flex items-center justify-between ${isContainer ? "py-0.5" : "py-1.5"}`}>
