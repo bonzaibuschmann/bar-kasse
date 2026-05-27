@@ -759,7 +759,7 @@ export default function RegisterPage() {
             categories={categories}
             layouts={layouts}
             editMode={editMode}
-            dialogOpen={editingProduct !== null || showSpecialDialog}
+            dialogOpen={editingProduct !== null || showSpecialDialog || showStaffDialog || showHistory}
             targetProducts={editProducts ?? undefined}
             rebuildKey={gridRebuildKey}
             onAddToCart={addToCart}
