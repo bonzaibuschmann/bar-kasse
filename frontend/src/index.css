@@ -24,10 +24,70 @@ html, body, #root {
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 /* Active state for buttons on touch */
 .touch-button:active {
   transform: scale(0.95);
   opacity: 0.9;
+}
+
+/* Flash animation for basket items */
+@keyframes basket-flash {
+  0% { background-color: rgba(244, 63, 94, 0.75); }
+  100% { background-color: transparent; }
+}
+.basket-row-flash {
+  animation: basket-flash 0.6s ease-out;
+}
+
+/* Remove animation for basket items */
+@keyframes basket-row-remove {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 60px;
+    margin-bottom: 4px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(80px);
+    max-height: 0;
+    margin-bottom: 0;
+  }
+}
+.basket-row-removing {
+  animation: basket-row-remove 0.1s ease-in forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Gridstack overrides for dark theme */
+.grid-stack {
+  min-height: 100%;
+  width: 100%;
+}
+.grid-stack > .grid-stack-item > .grid-stack-item-content {
+  background: transparent;
+  border: none;
+  inset: 0;
+  border-radius: 0;
+}
+.grid-stack > .grid-stack-item {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Edit mode: let pointer events pass through buttons so gridstack can drag */
+.grid-edit-mode .grid-stack-item-content button {
+  pointer-events: none;
+}
+
+.grid-stack-placeholder > .placeholder-content {
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 0;
 }

@@ -31,11 +31,18 @@ router.get("/summary", async (_req: Request, res: Response) => {
     ]);
 
     // Revenue by register
-    const registers = await prisma.order.groupBy({
-      by: ["register"],
+    const registerGroups = await prisma.order.groupBy({
+      by: ["registerId"],
       _sum: { total: true },
       _count: true,
     });
+
+    // Get register names from IDs
+    const registerIds = registerGroups.map(r => r.registerId).filter((id): id is number => id !== null);
+    const registerRecords = registerIds.length > 0
+      ? await prisma.register.findMany({ where: { id: { in: registerIds } } })
+      : [];
+    const registerMap = new Map(registerRecords.map(r => [r.id, r.name]));
 
     // Top products
     const topProducts = await prisma.orderItem.groupBy({
@@ -61,7 +68,7 @@ router.get("/summary", async (_req: Request, res: Response) => {
     // Hourly breakdown today
     const todayOrdersList = await prisma.order.findMany({
       where: { createdAt: { gte: today } },
-      select: { createdAt: true, total: true, register: true },
+      select: { createdAt: true, total: true, registerId: true },
     });
 
     const hourlyData: Record<number, { count: number; revenue: number }> = {};
@@ -80,8 +87,9 @@ router.get("/summary", async (_req: Request, res: Response) => {
       totalRevenue: totalRevenue._sum.total || 0,
       todayRevenue: todayRevenue._sum.total || 0,
       avgOrderValue: avgOrderValue._avg.total || 0,
-      registers: registers.map((r) => ({
-        register: r.register,
+      registers: registerGroups.map((r) => ({
+        registerId: r.registerId,
+        registerName: r.registerId ? registerMap.get(r.registerId) || `#${r.registerId}` : "Unassigned",
         revenue: r._sum.total || 0,
         orderCount: r._count,
       })),

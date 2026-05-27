@@ -31,24 +31,43 @@ model Product {
   category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   isDeposit         Boolean   @default(false)
   active            Boolean   @default(true)
+  display           Boolean   @default(true)
   order             Int       @default(0)
+  color             String?
+  image             String?
   depositId         Int?
   deposit           Product?  @relation("ProductDeposit", fields: [depositId], references: [id], onDelete: SetNull)
-  depositFor        Product[] @relation("ProductDeposit")
+  depositFor        Product[]      @relation("ProductDeposit")
+  defaultContainerId Int?
+  defaultContainer   Container? @relation(fields: [defaultContainerId], references: [id], onDelete: SetNull)
+  gridLayout        GridLayout?
   orderItems        OrderItem[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 }
 
+model Container {
+  id          Int          @id @default(autoincrement())
+  name        String
+  deposit     Float        @default(0)
+  image       String?
+  products    Product[]
+  gridLayouts GridLayout[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
 model Order {
-  id        Int         @id @default(autoincrement())
-  total     Float
-  cashGiven Float?
-  changeDue Float?
-  register  String      @default("1")
-  note      String?
-  createdAt DateTime    @default(now())
-  items     OrderItem[]
+  id           Int         @id @default(autoincrement())
+  total        Float
+  cashGiven    Float?
+  changeDue    Float?
+  registerId   Int?
+  register     Register?   @relation(fields: [registerId], references: [id], onDelete: SetNull)
+  note         String?
+  customerType String      @default("Guest")
+  createdAt    DateTime    @default(now())
+  items        OrderItem[]
 }
 
 model OrderItem {
@@ -68,4 +87,35 @@ model Register {
   name      String   @unique
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model StaffGroup {
+  id       Int           @id @default(autoincrement())
+  name     String
+  order    Int           @default(0)
+  members  StaffMember[]
+}
+
+model StaffMember {
+  id       Int        @id @default(autoincrement())
+  name     String
+  order    Int        @default(0)
+  group    StaffGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId  Int
+}
+
+model GridLayout {
+  id          Int        @id @default(autoincrement())
+  itemType    String     @default("Product") // "Product" | "ContainerIn" | "ContainerOut" | "Special"
+  productId   Int?       @unique
+  product     Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  containerId Int?
+  container   Container? @relation(fields: [containerId], references: [id], onDelete: SetNull)
+  xPosition   Int        @default(0)
+  yPosition   Int        @default(0)
+  width       Int        @default(1)
+  height      Int        @default(1)
+  color       String?
+  icon        String?
 }

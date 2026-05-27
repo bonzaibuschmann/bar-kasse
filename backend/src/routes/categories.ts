@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { prisma } from "../index";
 import { authMiddleware, requireAdmin } from "../middleware/auth";
+import { broadcastConfig } from "../websocket";
 
 const router = Router();
 
@@ -11,7 +12,6 @@ router.get("/", async (_req: Request, res: Response) => {
       orderBy: { order: "asc" },
       include: {
         products: {
-          where: { active: true },
           orderBy: { order: "asc" },
           include: { deposit: true },
         },
@@ -26,7 +26,7 @@ router.get("/", async (_req: Request, res: Response) => {
 // Create category (admin only)
 router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { name, icon, order } = req.body;
+    const { name, order } = req.body;
     if (!name) {
       res.status(400).json({ error: "Name required" });
       return;
@@ -37,6 +37,7 @@ router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Respons
     });
 
     res.status(201).json(category);
+    broadcastConfig();
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -57,6 +58,7 @@ router.put("/:id", authMiddleware, requireAdmin, async (req: Request, res: Respo
     });
 
     res.json(category);
+    broadcastConfig();
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -66,8 +68,28 @@ router.put("/:id", authMiddleware, requireAdmin, async (req: Request, res: Respo
 router.delete("/:id", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await prisma.category.delete({ where: { id: parseInt(id) } });
+    const categoryId = parseInt(id);
+
+    // Get all product IDs in this category
+    const products = await prisma.product.findMany({
+      where: { categoryId },
+      select: { id: true },
+    });
+    const productIds = products.map((p) => p.id);
+
+    // Clean up all related records, then delete the category
+    await prisma.$transaction(async (tx) => {
+      if (productIds.length > 0) {
+        await tx.orderItem.deleteMany({ where: { productId: { in: productIds } } });
+        await tx.gridLayout.deleteMany({ where: { productId: { in: productIds } } });
+        await tx.product.updateMany({ where: { depositId: { in: productIds } }, data: { depositId: null } });
+        await tx.product.deleteMany({ where: { categoryId } });
+      }
+      await tx.category.delete({ where: { id: categoryId } });
+    });
+
     res.json({ message: "Category deleted" });
+    broadcastConfig();
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }

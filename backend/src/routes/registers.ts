@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { authMiddleware, requireAdmin } from "../middleware/auth";
+import { broadcastConfig } from "../websocket";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -18,7 +19,7 @@ router.get("/", async (_req: Request, res: Response) => {
 // Create register (admin)
 router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { name, location } = req.body;
+    const { name } = req.body;
     if (!name) {
       res.status(400).json({ error: "Name is required" });
       return;
@@ -27,6 +28,7 @@ router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Respons
       data: { name, active: true },
     });
     res.status(201).json(register);
+    broadcastConfig();
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -45,6 +47,7 @@ router.put("/:id", authMiddleware, requireAdmin, async (req: Request, res: Respo
       },
     });
     res.json(register);
+    broadcastConfig();
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -56,6 +59,7 @@ router.delete("/:id", authMiddleware, requireAdmin, async (req: Request, res: Re
     const { id } = req.params;
     await prisma.register.delete({ where: { id: parseInt(id) } });
     res.json({ ok: true });
+    broadcastConfig();
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

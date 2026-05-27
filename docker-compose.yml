@@ -1,3 +1,7 @@
+# HOST_PATH must point to the project root on the Docker host filesystem.
+# When running from inside Hermes container, this is /root/.hermes/bar-kasse.
+# When running directly on the host, use . (relative) or the absolute host path.
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -25,7 +29,7 @@ services:
     container_name: barkasse-backend-dev
     restart: unless-stopped
     volumes:
-      - ./backend:/app
+      - ${HOST_PATH:-.}/backend:/app
       - /app/node_modules
     environment:
       - DATABASE_URL=postgresql://barkasse:${POSTGRES_PASSWORD:-secret123}@postgres:5432/barkasse
@@ -46,7 +50,7 @@ services:
     container_name: barkasse-frontend-dev
     restart: unless-stopped
     volumes:
-      - ./frontend:/app
+      - ${HOST_PATH:-.}/frontend:/app
       - /app/node_modules
     environment:
       - VITE_API_URL=http://backend-dev:4001
@@ -92,8 +96,8 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./deploy-webhook.js:/app/deploy-webhook.js:ro
-      - ./:/opt/bar-kasse:ro
+      - ${HOST_PATH:-.}/deploy-webhook.js:/app/deploy-webhook.js:ro
+      - ${HOST_PATH:-.}:/opt/bar-kasse:ro
     working_dir: /app
     environment:
       - WEBHOOK_SECRET=${WEBHOOK_SECRET:-webhook-secret-change-me}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Modal from "./Modal";
 
 interface Props {
   total: number;
@@ -26,9 +27,9 @@ export default function ChangeCalculator({ total, onConfirm, onCancel }: Props) 
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-select">
+    <Modal onClose={onCancel}>
       <div className="bg-[#111] border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
-        <h2 className="text-2xl font-bold text-center mb-4 text-yellow-400">
+        <h2 className="text-lg font-bold text-center mb-2 text-yellow-400">
           Checkout
         </h2>
 
@@ -111,6 +112,6 @@ export default function ChangeCalculator({ total, onConfirm, onCancel }: Props) 
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

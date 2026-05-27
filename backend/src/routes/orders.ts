@@ -13,11 +13,12 @@ interface CartItem {
 // Create order (public - cashiers need this)
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { items, cashGiven, register, note }: {
+    const { items, cashGiven, registerId, note, customerType }: {
       items: CartItem[];
       cashGiven?: number;
-      register?: string;
+      registerId?: number;
       note?: string;
+      customerType?: string;
     } = req.body;
 
     if (!items || items.length === 0) {
@@ -58,12 +59,14 @@ router.post("/", async (req: Request, res: Response) => {
         total,
         cashGiven: cash,
         changeDue: change,
-        register: register || "1",
+        registerId: registerId || null,
         note: note || null,
+        customerType: customerType || "Guest",
         items: { create: orderItems },
       },
       include: {
         items: { include: { product: true } },
+        register: true,
       },
     });
 
@@ -83,9 +86,38 @@ router.get("/recent", async (req: Request, res: Response) => {
       orderBy: { createdAt: "desc" },
       include: {
         items: { include: { product: true } },
+        register: true,
       },
     });
     res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get orders with cursor-based pagination (for history dialog infinite scroll)
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+    const before = req.query.before ? parseInt(req.query.before as string) : undefined;
+
+    const orders = await prisma.order.findMany({
+      take: limit + 1, // fetch one extra to detect hasMore
+      ...(before ? { where: { id: { lt: before } } } : {}),
+      orderBy: { id: "desc" },
+      include: {
+        items: {
+          include: { product: true },
+          orderBy: { id: "asc" },
+        },
+        register: true,
+      },
+    });
+
+    const hasMore = orders.length > limit;
+    if (hasMore) orders.pop();
+
+    res.json({ orders, hasMore });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -109,6 +141,7 @@ router.get("/range", async (req: Request, res: Response) => {
       },
       include: {
         items: { include: { product: true } },
+        register: true,
       },
       orderBy: { createdAt: "desc" },
     });
