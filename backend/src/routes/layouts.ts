@@ -13,8 +13,6 @@ type LayoutItem = {
   yPosition: number;
   width: number;
   height: number;
-  color?: string | null;
-  icon?: string | null;
 };
 
 // GET /api/layouts — public, returns all grid layouts
@@ -40,7 +38,7 @@ router.put("/", authMiddleware, requireAdmin, async (req: Request, res: Response
     }
 
     // Validate item types
-    const validTypes = ["Product", "ContainerIn", "ContainerOut", "Special"];
+    const validTypes = ["Product", "InboundContainer", "OutboundContainer", "Special"];
     for (const item of items) {
       if (!validTypes.includes(item.itemType)) {
         res.status(400).json({ error: `Invalid itemType: ${item.itemType}` });
@@ -56,13 +54,11 @@ router.put("/", authMiddleware, requireAdmin, async (req: Request, res: Response
           data: items.map((item) => ({
             itemType: item.itemType,
             productId: item.itemType === "Product" ? item.productId : null,
-            containerId: (item.itemType === "ContainerIn" || item.itemType === "ContainerOut") ? item.containerId : null,
+            containerId: (item.itemType === "InboundContainer" || item.itemType === "OutboundContainer") ? item.containerId : null,
             xPosition: item.xPosition ?? 0,
             yPosition: item.yPosition ?? 0,
             width: item.width ?? 1,
             height: item.height ?? 1,
-            color: item.color ?? null,
-            icon: item.icon ?? null,
           })),
         });
       }

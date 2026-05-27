@@ -9,15 +9,13 @@ export interface Register {
 
 export interface GridLayout {
   id: number;
-  itemType: string; // "Product" | "ContainerIn" | "ContainerOut" | "Special"
+  itemType: string; // "Product" | "InboundContainer" | "OutboundContainer" | "Special"
   productId: number | null;
   containerId: number | null;
   xPosition: number;
   yPosition: number;
   width: number;
   height: number;
-  color: string | null;
-  icon: string | null;
 }
 
 export interface SpecialBox {

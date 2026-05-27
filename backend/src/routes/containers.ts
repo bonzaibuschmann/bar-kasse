@@ -18,9 +18,9 @@ router.get("/", async (_req: Request, res: Response) => {
 // POST /api/containers — admin
 router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { name, deposit, image } = req.body;
+    const { name, deposit, image, inboundColor, inboundIcon, outboundColor, outboundIcon } = req.body;
     const container = await prisma.container.create({
-      data: { name, deposit: deposit ?? 0, image: image || null },
+      data: { name, deposit: deposit ?? 0, image: image || null, inboundColor: inboundColor || null, inboundIcon: inboundIcon || null, outboundColor: outboundColor || null, outboundIcon: outboundIcon || null },
     });
     broadcastConfig();
     res.json(container);
@@ -33,10 +33,10 @@ router.post("/", authMiddleware, requireAdmin, async (req: Request, res: Respons
 router.put("/:id", authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
-    const { name, deposit, image } = req.body;
+    const { name, deposit, image, inboundColor, inboundIcon, outboundColor, outboundIcon } = req.body;
     const container = await prisma.container.update({
       where: { id },
-      data: { name, deposit, image },
+      data: { name, deposit, image, inboundColor, inboundIcon, outboundColor, outboundIcon },
     });
     broadcastConfig();
     res.json(container);

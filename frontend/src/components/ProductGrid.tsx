@@ -81,22 +81,17 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
               productId: null,
               containerId: null,
               ...pos,
-              color: specialProduct?.color ?? null,
-              icon: specialProduct ? ((specialProduct as any).icon ?? null) : null,
             };
           }
 
           const containerInfo = containerIdFromVirtual(id);
           if (containerInfo) {
             // Container virtual product
-            const cp = containerProducts?.find(p => p.id === id);
             return {
-              itemType: containerInfo.isReturn ? "ContainerIn" : "ContainerOut",
+              itemType: containerInfo.isReturn ? "InboundContainer" : "OutboundContainer",
               productId: null,
               containerId: containerInfo.containerId,
               ...pos,
-              color: cp?.color ?? null,
-              icon: cp ? ((cp as any).icon ?? null) : null,
             };
           }
 
@@ -106,8 +101,6 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
             productId: id,
             containerId: null,
             ...pos,
-            color: null,
-            icon: null,
           };
         });
       await apiFetch("/layouts", {
@@ -172,8 +165,8 @@ export default function ProductGrid({ categories, layouts, editMode, dialogOpen,
         saved.set(`product:${l.productId}`, { x: l.xPosition, y: l.yPosition, w: l.width, h: l.height });
       } else if (l.itemType === "Special") {
         saved.set("special", { x: l.xPosition, y: l.yPosition, w: l.width, h: l.height });
-      } else if ((l.itemType === "ContainerIn" || l.itemType === "ContainerOut") && l.containerId != null) {
-        const offset = l.itemType === "ContainerIn" ? 0 : 1;
+      } else if ((l.itemType === "InboundContainer" || l.itemType === "OutboundContainer") && l.containerId != null) {
+        const offset = l.itemType === "InboundContainer" ? 0 : 1;
         const vid = -(5000 + l.containerId * 2 + offset);
         saved.set(`container:${vid}`, { x: l.xPosition, y: l.yPosition, w: l.width, h: l.height });
       }

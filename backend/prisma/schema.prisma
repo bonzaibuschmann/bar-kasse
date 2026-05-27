@@ -47,14 +47,18 @@ model Product {
 }
 
 model Container {
-  id          Int          @id @default(autoincrement())
-  name        String
-  deposit     Float        @default(0)
-  image       String?
-  products    Product[]
-  gridLayouts GridLayout[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              Int          @id @default(autoincrement())
+  name            String
+  deposit         Float        @default(0)
+  image           String?
+  inboundColor    String?
+  inboundIcon     String?
+  outboundColor   String?
+  outboundIcon    String?
+  products        Product[]
+  gridLayouts     GridLayout[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }
 
 model Order {
@@ -107,7 +111,7 @@ model StaffMember {
 
 model GridLayout {
   id          Int        @id @default(autoincrement())
-  itemType    String     @default("Product") // "Product" | "ContainerIn" | "ContainerOut" | "Special"
+  itemType    String     @default("Product") // "Product" | "InboundContainer" | "OutboundContainer" | "Special"
   productId   Int?       @unique
   product     Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
   containerId Int?
@@ -116,8 +120,6 @@ model GridLayout {
   yPosition   Int        @default(0)
   width       Int        @default(1)
   height      Int        @default(1)
-  color       String?
-  icon        String?
 }
 
 model SpecialBox {

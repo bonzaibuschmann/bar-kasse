@@ -219,16 +219,13 @@ export default function RegisterPage() {
   // (color overlay from GridLayout handled in the specialProduct useMemo)
 
   // Build virtual container products: return (←) and additional (+) per container
-  // Color comes from GridLayout (synced across clients); localStorage overrides are fallback
+  // Color/icon come from the Container table (synced across clients)
   const containerProducts = useMemo(() => {
     return containers.flatMap((c) => {
       const returnId = -(5000 + c.id * 2);
       const addId = -(5000 + c.id * 2 + 1);
       const returnOv = containerOverrides[returnId] || {};
       const addOv = containerOverrides[addId] || {};
-      // Color from GridLayout takes precedence
-      const returnLayout = layouts.find(l => l.itemType === "ContainerIn" && l.containerId === c.id);
-      const addLayout = layouts.find(l => l.itemType === "ContainerOut" && l.containerId === c.id);
       return [
         {
           id: returnId,
@@ -240,7 +237,7 @@ export default function RegisterPage() {
           active: returnOv.active ?? true,
           display: true,
           order: 0,
-          color: returnLayout?.color ?? "#1e3a5f",
+          color: c.inboundColor || "#1e3a5f",
           image: returnOv.image !== undefined ? returnOv.image : c.image,
           depositId: null,
           deposit: null,
@@ -258,7 +255,7 @@ export default function RegisterPage() {
           active: addOv.active ?? true,
           display: true,
           order: 0,
-          color: addLayout?.color ?? "#92400e",
+          color: c.outboundColor || "#92400e",
           image: addOv.image !== undefined ? addOv.image : c.image,
           depositId: null,
           deposit: null,
@@ -695,12 +692,25 @@ export default function RegisterPage() {
           continue;
         }
         if (data.productId < -1) {
-          // Container product — persist name/price/active/image to localStorage (color is now in GridLayout)
+          // Container product — persist to Container table and localStorage overrides
+          const containerId = Math.floor((-data.productId - 5000) / 2);
+          const isInbound = (-data.productId) % 2 === 0;
+          // Update localStorage overrides for name/price/active/image
           setContainerOverrides(prev => {
             const next = { ...prev, [data.productId]: { name: data.name, price: data.price, active: data.active, image: data.image } };
             localStorage.setItem("containerOverrides", JSON.stringify(next));
             return next;
           });
+          // Persist color to Container table
+          try {
+            const colorField = isInbound ? "inboundColor" : "outboundColor";
+            await apiFetch(`/containers/${containerId}`, {
+              method: "PUT",
+              body: JSON.stringify({ [colorField]: data.color }),
+            });
+          } catch (err: any) {
+            console.error("Failed to save container color:", err);
+          }
           continue;
         }
         try {

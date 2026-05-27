@@ -30,6 +30,10 @@ export interface Container {
   name: string;
   deposit: number;
   image: string | null;
+  inboundColor: string | null;
+  inboundIcon: string | null;
+  outboundColor: string | null;
+  outboundIcon: string | null;
 }
 
 export interface CartItem {
