@@ -108,7 +108,16 @@ export default function OrderHistoryDialog({ onClose, onLoadCopy, onEditOrder, r
   return (
     <Modal onClose={onClose}>
       <div className="bg-[#111] border border-gray-800 rounded-2xl p-6 shadow-2xl flex flex-col" style={{ width: "calc(100vw - 12vh)", height: "88vh" }}>
-        <h2 className="text-lg font-bold text-center mb-4 text-yellow-400">Order History</h2>
+        <div className="relative flex items-center justify-center mb-4">
+          <h2 className="text-lg font-bold text-yellow-400">Order History</h2>
+          <button
+            onClick={onClose}
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white text-sm touch-button"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
 
         {/* Register filter */}
         <div className="flex items-center gap-2 mb-4 justify-center">
