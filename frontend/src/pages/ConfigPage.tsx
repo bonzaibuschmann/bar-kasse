@@ -34,6 +34,8 @@ export default function ConfigPage() {
   const [showNewRegister, setShowNewRegister] = useState(false);
   const [showNewContainer, setShowNewContainer] = useState(false);
   const [depositProducts, setDepositProducts] = useState<Product[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [formName, setFormName] = useState("");
   const [formPrice, setFormPrice] = useState("");
@@ -80,6 +82,8 @@ export default function ConfigPage() {
   }, [showNewContainer]);
 
   async function loadData() {
+    setDataLoading(true);
+    setLoadError(null);
     try {
       const [cats, prods, regs, conts, staff] = await Promise.all([
         apiFetch<Category[]>("/categories"),
@@ -94,10 +98,14 @@ export default function ConfigPage() {
       setRegisters(regs);
       setContainers(conts);
       setStaffGroups(staff);
+      setDataLoading(false);
     } catch (err: any) {
+      setDataLoading(false);
       if (err.message?.includes("401") || err.message?.includes("403")) {
         logout(); navigate("/login");
+        return;
       }
+      setLoadError(err.message || "Failed to load data");
     }
   }
 
@@ -322,6 +330,26 @@ export default function ConfigPage() {
           </button>
         </div>
       </div>
+
+      {/* Loading / Error states */}
+      {dataLoading && (
+        <div className="mb-6 bg-[#111] rounded-2xl p-8 text-center">
+          <div className="inline-block w-6 h-6 border-2 border-gray-600 border-t-yellow-400 rounded-full animate-spin"></div>
+          <p className="text-gray-500 text-sm mt-3">Loading configuration…</p>
+        </div>
+      )}
+      {loadError && (
+        <div className="mb-6 bg-red-900/30 border border-red-800 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p className="text-red-400 font-medium text-sm">Failed to load data</p>
+            <p className="text-red-500/70 text-xs mt-0.5">{loadError}</p>
+          </div>
+          <button onClick={loadData} className="px-4 py-2 bg-red-700 hover:bg-red-600 rounded-lg text-sm font-bold touch-button shrink-0">
+            Retry
+          </button>
+        </div>
+      )}
+      {!dataLoading && !loadError && (<>
 
       {/* ===== 1. Products ===== */}
       <div className="mb-6 bg-[#111] rounded-2xl p-4">
@@ -737,6 +765,7 @@ export default function ConfigPage() {
         ))}
       </div>
 
+      </>)}
     </div>
   );
 }
